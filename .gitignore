@@ -1,6 +1,6 @@
 *.html
 nbout
-_drafts
+_*
 .ipynb_checkpoints
 .Rhistory
 Rnotebooks

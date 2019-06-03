@@ -284,13 +284,13 @@ head(preds)
 
 It is all too easy to be mislead by a high accuracy score, 91.6% would be quite good if we were dealing with balanced data, but with this set being as imbalanced as it is, this score is actually worse than if the model had just chosen 0('No') for every sample, taking this route would have yielded ~94% accuracy. 
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 cfmROC(preds,test_data$CARAVAN)
 ```
 
 #### Boosting (Adaboost)
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 ada_orig <- train(CARAVAN ~ ., data = train_data,
                   method = "ada",
                   metric = "ROC",
@@ -304,7 +304,7 @@ cfmROC(pred, test_data$CARAVAN)
 
 #### Random Forest 
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 rf_orig <- train(CARAVAN ~ ., data = train_data, 
                       method = "rf",
                       metric = "ROC",
@@ -344,7 +344,7 @@ dtest <- xgb.DMatrix(data = mat_test, label = c_label_test)
 preds_xgb <- predict(xgb_orig, dtest)
 ```
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 # convert xgb's predicted probabilities back into binary output 
 cfmROC(as.factor(ifelse(preds_xgb > 0.5, 1, 0)), as.factor(c_label_test))
 ```
@@ -355,7 +355,7 @@ cfmROC(as.factor(ifelse(preds_xgb > 0.5, 1, 0)), as.factor(c_label_test))
 
 #### Bagging
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 bag_down <- train(CARAVAN ~ ., data = down_train, 
                       method = "treebag",
                       metric = "ROC",
@@ -370,19 +370,19 @@ The only change moving between data resamplings is the `data = ..` parameter, ev
 
 #### Boosting (Adaboost)
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 ada_down <- run.model(method = "ada", traind = down_train, testd = test_data)
 ```
 
 #### Random Forest
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 rf_down <- run.model(method = "rf", traind = down_train, testd = test_data)
 ```
 
 #### XGBoost
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 xgb_down <- run.model(method = "xgb", traind = down_train, testd = test_data)
 ```
 
@@ -392,25 +392,25 @@ xgb_down <- run.model(method = "xgb", traind = down_train, testd = test_data)
 
 #### Bagging
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 bag_up <- run.model(method = "treebag", up_train, test_data)
 ```
 
 #### Boosting (Adaboost)
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 ada_up <- run.model(method = "ada", up_train, test_data)
 ```
 
 #### Random Forest
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 rf_up <- run.model(method = "rf", up_train, test_data)
 ```
 
 #### XGBoost
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 xgb_up <- run.model(method = "xgb", up_train, test_data)
 ```
 
@@ -420,25 +420,25 @@ xgb_up <- run.model(method = "xgb", up_train, test_data)
 
 #### Bagging
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 bag_smote <- run.model(method = "treebag", smote_train, test_data)
 ```
 
 #### Boosting (Adaboost)
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 ada_smote <- run.model(method = "ada", smote_train, test_data)
 ```
 
 #### Random Forest
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 rf_smote <- run.model(method = "rf", smote_train, test_data)
 ```
 
 #### XGBoost
 
-```{r, fig.width=8, fig.height=4}
+```{r fig.width=8, fig.height=4}
 xgb_smote <- run.model(method = "xgb", smote_train, test_data)
 ```
 
@@ -550,11 +550,11 @@ plot.featimps <- function(resample.method="Unbalanced"){
 grepl("sm.+","smt", ignore.case = TRUE)
 ```
 
-```{r, fig.width=10, fig.height=6}
+```{r fig.width=10, fig.height=6}
 plot.featimps("Unbalanced")
 ```
 
-```{r, fig.width=10, fig.height=6}
+```{r fig.width=10, fig.height=6}
 plot.featimps("Down")
 ```
 ```{r}
