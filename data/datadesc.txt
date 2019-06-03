@@ -1,0 +1,35 @@
+Source: https://www.eea.europa.eu/publications/costs-of-air-pollution-2008-2012
+
+This report applies two contrasting but complementary approaches for valuing health damage caused by
+main air pollutants — the value of statistical life (VSL) and the value of a life year (VOLY).
+
+• The value of statistical life (VSL) — an estimate of damage costs based on how much people are willing
+to pay for a reduction in their risk of dying from adverse health conditions;
+
+• The value of a life year (VOLY) — an estimate of damage costs based upon the loss of life expectancy
+(expressed as potential years of life lost, or YOLLs). This measure takes into account the age at which
+deaths occur by giving greater weight to deaths at younger age and lower weight to deaths at older
+age.
+
+Pollutant,Low VOLY,High VSL
+Ammonia (NH3),10460,30908
+Nitrogen Oxides (NOx),4419,11966
+Non-methane VOCs (NMVOCs),1461,3808
+Particulates (PM10),22990,66699
+Particulates (PM2.5),22990,66699
+Sulphur Oxides (SO2),9792,28576
+
+NH3(Low VOLY),10460
+NH3(High VSL),30908
+NOx(Low VOLY),4419
+NOx(High VSL),11966
+NMVOCs(Low VOLY),1461
+NMVOCs(High VSL),3808
+Particulates(Low VOLY),22990
+Particulates(High VSL),66699
+SO2(Low VOLY),9792
+SO2(High VSL),28576
+
+
+
+

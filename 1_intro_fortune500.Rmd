@@ -1,0 +1,157 @@
+---
+title: "Introduction: Fortune 500 Companies"
+author: "Ryan Gust"
+date: "September 16, 2018"
+output: 
+  html_document: 
+    self_contained: no
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,      # Output code chunks
+    message = FALSE,  # Toggle off message output 
+    warning = FALSE)  # Toggle off warning output
+```
+
+## Overview
+
+The purpose of this introductory notebook is to get our feet wet with R, starting off with a simple, but certainly not boring, dataset. We will be using the Fortune 500 companies list from 1955-2005.
+
+We'll do some simple plotting with `ggplot` to explore the data in greater detail and addressing issues with the data as we find them.
+
+### Imports
+```{r}
+library(tidyverse)
+```
+[Tidyverse](https://www.tidyverse.org/) is the bread and butter of many R-based analyses, it provides us with ggplot, pipe operators (`%>%`), spreading, dataframe manipulations, and much, much more.
+
+## Data
+
+The external data used in this notebook can be obtained from: https://www.dataquest.io/blog/large_files/fortune500.csv
+
+The CSV file contains information about fortune 500 companies spanning the years 1955 - 2005.<br>
+There are 25500 rows representing 51 (years) sets of 500 (companies).
+
+**The provided columns include:**
+
+* `Year` - year that the fortune 500 list was published
+* `Rank` - company's position on the fortune 500 list
+* `Company` - name of the company
+* `Revenue (in millions)` - company's revenue for that year
+* `Profit (in millions)` - company's profit for that year
+
+```{r}
+(f500 <- read.csv('data/fortune500.csv'))
+```
+```{r}
+# Remove the trailing peroid from column names 
+colnames(f500) <- gsub('\\.$','',colnames(f500))
+```
+
+## Exploratory Data Analysis
+
+The dataset has a handful of missing values which we will need to deal with and some interesting duplicates that may or may not be data errors.
+
+```{r}
+all(complete.cases(f500))
+str(f500)
+```
+The complete cases statement here is telling us that there is no missing values, however, something is amiss in the `Profit..in.millions` field. It was read in as a factor rather than a double, a strong indication that some other value may be used as a stand-in for N/A
+
+```{r}
+summary(f500$Profit..in.millions)
+```
+The string `N.A.` is likely the root of this issue
+
+```{r}
+f500 %>% filter(Profit..in.millions == 'N.A.')
+```
+
+```{r}
+f500$Profit..in.millions <- as.double(gsub('N\\.A\\.',0.0,f500$Profit..in.millions))
+```
+Here, we can use gsub again to replace all the `N.A.` values with 0.0, casting it to a double
+
+```{r}
+sum(table(f500$Company) > 50)
+```
+There are 74 companies who have been included all 51 years
+
+```{r}
+f500 %>% count(Company, sort=TRUE)
+```
+It appears that CBS and OfficeMax, have duplicate entries in certain years, let's see if we can track down the erroneous years.
+
+```{r}
+f500 %>% 
+  filter(Company %in% c("CBS", "OfficeMax")) %>% 
+  group_by(Year, Company) %>% 
+  count() %>% 
+  filter(n > 1)
+```
+CBS is duplicated in years 1972-81, 1995 and OfficeMax is duplicated between 1996-2003. Since we only can assume that this is an error and cannot know for sure without understanding the data collection process, we will leave these entries be for now. It is also possible that these duplication are due to a merger between companies in later years, given that all company names are represented by their 2005 equivalent.
+
+### Plotting exploration
+```{r, fig.width=9, fig.height=5}
+f500 %>% 
+  filter(Company %in% c('Kellogg','3M','Pfizer')) %>% # Choose 3 arbitrary companies
+  ggplot(mapping = aes(Year, Rank, color=Company)) +
+  geom_line(aes(linetype=Company), size=1.2) +
+  labs(title='Fortune 500 Rank - 3M, Kellogg, and Pfizer (1955-2005)') +
+  scale_y_continuous(breaks = seq(0, 300, by=30), limits=c(300,1), trans = 'reverse') +
+  geom_vline(xintercept = 1994)
+```
+Clearly, in 1994 there was a large upset in these particular company's historical trends. In absence of other information, one may guess that the proliferation of the internet may be at play in these sharp declines.
+
+```{r}
+(sprdf <-f500 %>% 
+  filter(Year %in% 1993:1996) %>% 
+  select(c(Year,Company,Rank)) %>% 
+  spread(Year, Company))
+```
+We can already spot a quite few changes in the top 10 ranks between '94 and '95. Only 1 company changed between '93 and '94 but just one year later we see 3 new companies as well as many shifts up and down the ladder.
+
+```{r}
+length(setdiff(sprdf$`1994`,sprdf$`1995`))
+length(setdiff(sprdf$`1993`,sprdf$`1994`))
+```
+Comparing all entries between 1994 and 1995 yields a set-wise difference of 291 companies, compare that to the previous year pair and we only see a total difference of 33 companies. Let's see if this spike is abnormal compared to all other sequential pairs.
+
+```{r}
+f55.99 <- f500 %>% 
+  filter(Year %in% 1955:1999) %>% 
+  select(c(Year,Company,Rank)) %>% 
+  spread(Year, Company)
+```
+Note: years 2000-2005 refused to spread nicely due to duplicate value entries, so they were omitted. From the python analysis, we know that this range fits expectations regardless
+
+```{r}
+yoy.diff <- vector()
+for(i in 2:45) yoy.diff <- c(yoy.diff, length(setdiff(f55.99[,i],f55.99[,i+1])))
+yoy <- data.frame(cbind(Year=as.numeric(colnames(f55.99[3:46])),diff.from.prev = as.numeric(yoy.diff)))
+```
+
+```{r}
+yoy %>% 
+  ggplot(aes(Year, diff.from.prev)) +
+  geom_line() + geom_point() +
+  labs(title="Number of differing companies compared to previous year") +
+  scale_x_continuous(breaks = seq(1955,2000,5)) + 
+  scale_y_continuous(breaks = seq(0,300,50))
+```
+A plot showing year over year difference verifies that 1994-1995 was indeed an anomaly. Our previous hypothesis that the sudden shift was due to the internet proliferating is almost certainly incorrect. The far more likely scenario is that there is either an error in the data collection process, or, the Fortune 500 list dramatically changed their company selection process.
+
+## Conclusions
+
+This notebook took a brief look at the Fortune 500 companies dataset (1955-2005). Our analysis led to several interesting discoveries, namely, we found that CBS and OfficeMax are included twice in certain years, and from 1994 to 1995 there was a dramatic shift in included companies. Despite the chosen dataset being relatively simple, we still managed to extract some useful information out of it. We did not even use the revenue or profits columns, so there is still a lot of room for exploration.
+
+#### Future Work
+We leave this notebook with some unanswered questions: 
+
+* What actually caused the '94-95 shift? 
+* Why were some companies included multiple times? 
+
+A fully fleshed out analysis would seek external sources of information and bring it into the notebook to answer these questions. Additionally, we could certainly investigate profits and revenue to see how they correlate with ranking from year to year, or even do some simple linear modeling to really start to understand this data. These sort of analyses and many others will be performed in following notebooks, so have a look around if you'd like to dig a little deeper.

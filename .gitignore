@@ -1,0 +1,7 @@
+*.html
+nbout
+_drafts
+.ipynb_checkpoints
+.Rhistory
+Rnotebooks
+*.sublime-workspace

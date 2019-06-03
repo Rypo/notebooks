@@ -1,0 +1,344 @@
+---
+title: "Multiple Linear Models"
+author: "Ryan Gust"
+date: "December 30, 2018"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Overview
+
+This document will fit a multiple linear model on two separate datasets: `Boston` from the `MASS` library, and `Carseats` from the `ISLR` library.
+
+Various methods will be used to better the models created including:
+
+* Removal of insignificant predictors
+* Removal of highly collinear predictors
+* Addition of polynomial terms
+* Addition of interaction terms
+
+### Imports
+
+```{r rimports}
+library(MASS)
+library(ISLR)
+library(car)
+#library(ggplot2)
+library(tidyverse)
+library(magrittr)
+```
+
+## Boston
+
+### Data
+
+This dataset is from the `MASS` library, it contains information collected by the U.S Census Service in 1970 concerning housing in the area of Boston Mass.
+
+The dataset contains 506 and 14 columns:
+
+* `crim` - per capita crime rate by town.
+* `zn` - proportion of residential land zoned for lots over 25,000 sq.ft.
+* `indus` - proportion of non-retail business acres per town.
+* `chas` - Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+* `nox` - nitrogen oxides concentration (parts per 10 million).
+* `rm` - average number of rooms per dwelling.
+* `age` - proportion of owner-occupied units built prior to 1940.
+* `dis` - weighted mean of distances to five Boston employment centres.
+* `rad` - index of accessibility to radial highways.
+* `tax` - full-value property-tax rate per \$10,000.
+* `ptratio` - pupil-teacher ratio by town.
+* `black` - 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+* `lstat` - lower status of the population (percent).
+* `medv` - median value of owner-occupied homes in \$1000s.
+
+Additional information can be found:<br>
+https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html
+
+https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.926.5532&rep=rep1&type=pdf
+
+or by typing `?Boston` after importing `MASS`
+
+```{r bmdata}
+(bm <- MASS::Boston)
+```
+
+### Exploratory Data Analysis
+
+The Boston dataset has no missing values and contains only numeric data, though this far from an extensive data assessment, for the purposes of this demonstration, the data can be assumed clean enough. A more thorough assessment could be performed by reading the [original paper](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.926.5532&rep=rep1&type=pdf) to see if the author filled in any missing values or specified any other manipulations.
+
+```{r}
+all(complete.cases(bm))
+str(bm)
+```
+
+```{r bmplot, fig.width=12}
+plot(bm)
+```
+From a quick plot, we can see a quite a few possible linear relationship candidates:
+rm:zn, dis:zn, nox:dis, nox:age, rm:lstat, ...
+
+Looking exclusively at medv relationships: <br>
+medv:lstat, medv:rm, medv:age, medv:zn
+
+```{r}
+par(mfrow=c(2,2))
+plot(medv~lstat + rm + age + zn, data=bm)
+```
+
+```{r lmfirst}
+summary(lm(bm$medv ~ . ,data=bm))
+```
+
+Taking a more scientifically rigorous approach, we can see why simply looking at plots can be misleading.<br>
+`lstat` and `rm` are extremely good, with a p-value even smaller than machine epsilon, `zn` meets the p=0.05 threshold, but `age` turns out to be well beyond any useful significance level. 
+ 
+Additionally, there were several variables whose plots did not immediately show obvious correlation that also have extremely low p-values:
+```
+        t-value  p-value
+dis      -7.398  6.01e-13 ***
+ptratio  -7.283  1.31e-12 ***
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(medv ~ dis + ptratio, data=bm)
+```
+
+Check the data for correlations with Variance Inflation Factors
+
+```{r}
+vif(lm(medv ~ ., data=bm))
+vif(lm(medv ~ rad+tax, data=bm))
+```
+
+There are some highly correlated values among predictors, before we are able to make a suitable model, this issue will need to be addressed. As a general rule of thumb, VIF of > 5 means that the variable should be looked at to determine if there are issues, VIF > 10, that variable is almost certainly causing colinearity issues.
+
+```{r}
+AIC(lm(medv ~ . ,data=bm))
+BIC(lm(medv ~ . ,data=bm))
+```
+
+### Models
+
+The baseline values for our multiple linear model are: <br>
+Multiple R-squared:  0.7406,	Adjusted R-squared:  0.7338,  AIC:  3027.609,  BIC:  3091.007
+
+After a bit of feature selection and added polynomial terms the final model values are:
+Multiple R-squared:  0.8168,	Adjusted R-squared:  0.8120,  AIC:  2851.624,  BIC:  2915.022
+
+A fairly sizable improvement across the board
+
+```{r}
+# exclude variables where p>0.05
+summary(lm(medv ~. - age - indus, data=bm))
+```
+
+Excluding `age` and `indus` from the model slightly improves the adjusted R-squared value.
+
+```{r}
+smry <- summary(lm(medv~. ,data=bm))
+smry$coefficients
+```
+```{r}
+summary(lm(medv~. ,data=bm))
+bm[smry$coefficients[,4] < 5e-4]
+```
+
+```{r}
+summary(lm(medv ~. -age -indus -crim -chas -zn -tax -rad -black, data=bm))
+# summary(lm(medv ~ nox +rm +dis +ptratio +lstat, data=bm)) # equivalently
+```
+
+Dropping all but the strongest indicators has reduced the R² value from 0.7348 to 0.7052 but has greatly simplified the model. Depending on the use case this may or may not be desirable, for the purposes of this demonstration, the simpler model will suffice.
+
+```{r}
+vif(lm(bm$medv ~ lstat +rm +ptratio +dis +nox, data=bm))
+vif(lm(medv ~ dis +nox, data=bm))
+```
+
+By reducing the number of parameters, much of the issues with collinearity among predictors has been resolved. A moderate correlation still exists in `dis` and `nox`, but not likely strong enough to cause large distortions in the model.
+
+```{r}
+# build a model from the five lowest p-values
+lm_lrpdn <- lm(medv ~ lstat +rm +ptratio +dis +nox, data=bm)
+summary(lm_lrpdn)
+```
+
+```{r}
+lm_poly <- lm(medv ~ poly(lstat,5) +poly(rm,5) +ptratio +dis +nox, data=bm)
+summary(lm_poly)
+```
+
+From only two polynomial transforms we've improved the R-squared value significantly, now at 0.812, well beyond the original R-squared value of 0.7348 while using far fewer input variables.
+
+```{r}
+# Before adding polynomial
+print(paste('AIC:',round(AIC(lm_lrpdn),3), "BIC:",round(BIC(lm_lrpdn),3)),quote=FALSE)
+
+# After adding polynomial
+print(paste('AIC:',round(AIC(lm_poly),3), "BIC:",round(BIC(lm_poly),3)), quote=FALSE)
+```
+The poly model also saw a decrease in AIC and BIC values
+
+[Akaike's information criterion (AIC)](https://en.wikipedia.org/wiki/Akaike_information_criterion) and [Bayesian information criterion (BIC)](https://en.wikipedia.org/wiki/Bayesian_information_criterion) can be used to estimate the 'goodness' of a statistical model, both addressing the trade-off between goodness of fit and complexity in slightly different ways.
+
+http://r-statistics.co/Linear-Regression.html
+
+```{r lmfin, fig.width=12}
+par(mfrow=c(2,2))
+plot(lm_poly)
+```
+
+## Carseats
+
+### Data
+
+The data used in this notebook is from ISLR's `Carseats` dataset. It represents simulated data of child carseat sales at 400 different stores with 11 variables: 
+ 
+* `Sales` - Unit sales (in thousands) at each location
+* `CompPrice` - Price charged by competitor at each location
+* `Income` - Community income level (in thousands of dollars)
+* `Advertising` - Local advertising budget for company at each location (in thousands of dollars)
+* `Population` - Population size in region (in thousands)
+* `Price` - Price company charges for car seats at each site
+* `ShelveLoc` - A factor with levels Bad, Good and Medium indicating the quality of the shelving location for the car seats at each site
+* `Age` - Average age of the local population
+* `Education` - Education level at each location
+* `Urban` - A factor with levels No and Yes to indicate whether the store is in an urban or rural location
+* `US` - A factor with levels No and Yes to indicate whether the store is in the US or not
+
+
+Additional information can be found:<br>
+https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Carseats
+
+or by typing `?Carseats` after importing `ISLR`
+
+```{r csdata}
+(cs <- Carseats)
+```
+
+
+### Exploratory Data Analysis
+
+`Carseats` is a simulated data set with no missing values. Being artificial, there is no reason to believe that the data is anything but clean. However, not all of the variables are numeric, so that is something worth keeping in mind when constructing models. There are 3 categorical variables, 2 binary (`Urban`,`US`) and 1 ordinal (`ShelveLoc`)
+
+```{r}
+all(complete.cases(cs))
+str(cs)
+```
+```{r}
+plot(cs)
+```
+
+```{r}
+summary(lm(Sales ~ ., data=cs))
+```
+
+R handles the dummy encoding of categorical variables for us so long as they are designated as factors rather than chars
+
+```{r}
+summary(lm(cs$Sales ~. -Population -Education -Urban -US, data=cs))
+```
+
+Following a similar process as before, features outside of the statistical significance threshold are excluded.
+
+This time, the adjusted R-squared value decreased but by so little, it could be safely written off as noise.
+
+```{r}
+vif(lm(Sales ~., data=cs))
+```
+
+```{r}
+scs <- subset(cs, select=-c(Population, Education, Urban, US))
+vif(lm(Sales ~., data=scs))
+```
+
+Neither the original nor the reduced data appear to have issues with high collinearity, so no further action is required before modeling
+
+```{r, fig.width=10}
+plot(scs)
+```
+
+A quick plot shows potential for a linear relationships between Price and CompPrice/Sales
+
+### Models
+
+The baseline values for our multiple linear model are: <br>
+Multiple R-squared:  0.8734,	Adjusted R-squared:  0.8698,  AIC:  1160.470,  BIC:  1196.393
+
+After feature selection, added polynomial and interaction terms, the final model values are:<br>
+Multiple R-squared:  0.8768,	Adjusted R-squared:  0.8730,  AIC:  1155.221,  BIC:  1211.101
+
+These results are far from ideal, only 3/4 metrics improved and only by a very small amount.
+
+```{r}
+summary(lm(Sales ~ ., data=scs))
+```
+
+```{r}
+summary(lm(Sales ~ . + Income:Advertising + Price:Age, data=scs))# ILSR 3.6.6
+```
+
+Including a couple of interaction terms increases the adjusted R-squared value by a small amount
+
+```{r}
+lm_fin <- lm(Sales ~ CompPrice +ShelveLoc +Income*Advertising +Price*Age +poly(Price,4), data=scs)
+summary(lm_fin)
+```
+
+By using both polynomial and interaction terms, the highest R-squared we are able to achieve is 0.873. However, investing more time into deeper exploration of transforms and interactions would almost certainly garner better results.
+
+```{r}
+AIC(lm(Sales ~ ., data=scs))
+BIC(lm(Sales ~ ., data=scs))
+
+AIC(lm_fin)
+BIC(lm_fin)
+```
+
+Because the model complexity increased a fair deal from these modifications, the BIC value increased and AIC only decreased slightly. Thus, it is debatable whether making these changes actually would improve the model's predictive power.
+
+```{r csfin, fig.width=12}
+par(mfrow=c(2,2))
+plot(lm_fin)
+
+```
+
+## Conclusions
+
+This notebook explored two datasets, `Boston` and `Carseats`, building multiple linear models for each. 
+
+The process was very similar for both datasets:
+
+determine variable importance -> deal with collinearity -> dimension reduction -> add transforms/interactions -> assess
+
+The results of following this process differed quite a bit between the two datasets, however. The Boston dataset responding very well to the transformed terms added, increasing the R-squared value significantly. The Carseats dataset was rather unresponsive to the applied transforms. 
+
+There could be several different reasons for the alternate outcomes, could be because one dataset was real and the other contrived, or because one had all continuous variables and the other had some categorical.
+
+**Future Work**:
+A great deal more could be done with these datasets. For starters, a future task could be to try and make predictions with these models, adding more interactions or transforms to improve the R-squared values, stepping out of linear models and try using a GBM or RF to make more sense of the data, and more visualizations could be toyed with, expanding out into 3d or plotting on a map in the case of the Boston dataset.
+
+### References:
+
+**Code:** <br>
+http://www-bcf.usc.edu/~gareth/ISL/ISLR%20Seventh%20Printing.pdf  (Chap 3, sec 3.6.5-3.6.6)
+
+**Text:** <br>
+https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html
+
+https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
+
+https://cran.r-project.org/web/packages/ISLR/ISLR.pdf
+
+**Other:** <br>
+https://www.statmethods.net/input/missingdata.html
+
+http://r-statistics.co/Linear-Regression.html
