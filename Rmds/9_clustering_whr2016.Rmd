@@ -4,25 +4,31 @@ author: "Ryan Gust"
 date: "December 26, 2018"
 output:
   html_document:
+    editor_options: 
+      chunk_output_type: inline
+    self_contained: false
+    lib_dir: Rlibs
     df_print: paged
 ---
 
 ## Overview
 
 This notebook will run 4 main clustering models and 2 optional:
-* K-means
-* Agglomerative Clustering
-* Affinity Propagation
-* Gaussian Mixture
-* DBSCAN (optional)
-* HDBSCAN (optional)
+
+- K-means
+- Agglomerative Clustering
+- Affinity Propagation
+- Gaussian Mixture
+- DBSCAN (optional)
+- HDBSCAN (optional)
 
 on the 2016 World Happiness Report dataset.
 
 Each model will be visualized in 3 different forms:
-* A scatter plot using unaltered data
-* A scatter plot using scaled data
-* A Boxplot of the unaltered data
+
+- A scatter plot using unaltered data
+- A scatter plot using scaled data
+- A Boxplot of the unaltered data
 
 ### Imports
 
@@ -50,19 +56,19 @@ So, in essence, this data is modeled in such a way as to measure how much better
 
 It has 13 variables, of which that last 7 are calculated via some weighting metric:
 
-* `Country` - Name of the country.
-* `Region` - Region the country belongs to.
-* `Happiness Rank` - Rank of the country based on the Happiness Score.
-* `Happiness Score` - Metric measured in 2016 by asking sampled people: "How would you rate your happiness on a scale of 0 to 10 where 10 is the happiest."
-* `Lower Confidence Interval` - Lower Confidence Interval of the Happiness Score
-* `Upper Confidence Interval` - Upper Confidence Interval of the Happiness Score
-* `Economy (GDP per Capita)` - The extent to which GDP contributes to the calculation of the Happiness Score.
-* `Family` - The extent to which Family contributes to the calculation of the Happiness Score
-* `Health (Life Expectancy)` - The extent to which Life expectancy contributed to the calculation of the Happiness Score
-* `Freedom` - The extent to which Freedom contributed to the calculation of the Happiness Score.
-* `Trust (Government Corruption)` - The extent to which Perception of Corruption contributes to Happiness Score.
-* `Generosity` - The extent to which Generosity contributed to the calculation of the Happiness Score.
-* `Dystopia Residual` - The extent to which Dystopia Residual contributed to the calculation of the Happiness Score.
+- `Country` - Name of the country.
+- `Region` - Region the country belongs to.
+- `Happiness Rank` - Rank of the country based on the Happiness Score.
+- `Happiness Score` - Metric measured in 2016 by asking sampled people: "How would you rate your happiness on a scale of 0 to 10 where 10 is the happiest."
+- `Lower Confidence Interval` - Lower Confidence Interval of the Happiness Score.
+- `Upper Confidence Interval` - Upper Confidence Interval of the Happiness Score.
+- `Economy (GDP per Capita)` - The extent to which GDP contributes to the calculation of the Happiness Score.
+- `Family` - The extent to which Family contributes to the calculation of the Happiness Score.
+- `Health (Life Expectancy)` - The extent to which Life expectancy contributed to the calculation of the Happiness Score.
+- `Freedom` - The extent to which Freedom contributed to the calculation of the Happiness Score.
+- `Trust (Government Corruption)` - The extent to which Perception of Corruption contributes to Happiness Score.
+- `Generosity` - The extent to which Generosity contributed to the calculation of the Happiness Score.
+- `Dystopia Residual` - The extent to which Dystopia Residual contributed to the calculation of the Happiness Score.
 
 
 Relevant files:

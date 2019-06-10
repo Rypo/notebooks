@@ -2,9 +2,13 @@
 title: "Gradient Boosting with XGBoost and Agaricus"
 author: "Ryan Gust"
 date: "December 26, 2018"
-output: html_notebook
-editor_options: 
-  chunk_output_type: inline
+output:
+  html_document:
+    editor_options: 
+      chunk_output_type: inline
+    self_contained: false
+    lib_dir: Rlibs
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -80,7 +84,7 @@ dim(test$data)
 ```
 
 ```{r}
-train$data
+head(train$data, n=10)
 ```
 
 ```{r}

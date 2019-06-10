@@ -6,9 +6,25 @@ output: html_notebook
 editor_options: 
   chunk_output_type: inline
 ---
+```{r include=FALSE}
+# output:
+#   html_document:
+#     editor_options: 
+#       chunk_output_type: inline
+#     self_contained: false
+#     lib_dir: Rlibs
+#     df_print: paged
+
+# COMPLETE RANDOM FOREST FEATURE IMPORTANCE BEFORE SHIP
+# NOTE: DO NOT ATTEMPT TO RUN UNTIL ERROR RESOLVED... RUN TIME LONG:
+
+# Line 259 Error in { : task 1 failed - "argument 1 is not a vector"
+# Calls: <Anonymous> ... rfe.default -> nominalRfeWorkflow -> %op% -> <Anonymous>
+# Execution halted
+```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)#, warning = FALSE)
 ```
 
 ## Overview
@@ -43,15 +59,13 @@ The dataset used is from the CoIL Challenge 2000 datamining competition. It may 
 
 It contains information on customers of an insurance company. The data consists of 86 variables and includes product usage data and socio-demographic data derived from zip area codes.
 
-A description of each variable may be found in `data_dfns.md` or at the link in this cell listed above
+A description of each variable may be found at the link in this cell listed above
 
 The variable descriptions are quite important as it appears as though the variable names themselves are abbreviated in Dutch. One helpful pattern to notice is the letters that variables begin with:
 
 * **M** - primary demographics?, no guess for abbreviation
 * **A** - numbers, likely for dutch word _aantal_
 * **P** - percents, likely for dutch word _procent_
-
-`data` houses the Kaggle obtained dataset as well as any subsequent modified version of it.
 
 
 **Acknowledgements:**
@@ -86,7 +100,7 @@ When the backward method is used, the model begins with the full set of predicto
 # Forward pass
 step.pvmodel.fwd <- SignifReg(CARAVAN ~ ., data=cic_data,
                     alpha=0.05, direction="forward", 
-                    criterion="p-value",correction="FDR")
+                    criterion="p-value",correction="FDR", trace = FALSE)
 
 summary(step.pvmodel.fwd)
 ```
@@ -95,12 +109,12 @@ summary(step.pvmodel.fwd)
 # Backward pass
 step.pvmodel.bkwd <-SignifReg(CARAVAN~., data=cic_data, 
                       alpha=0.05, direction="backward",
-                      criterion="p-value", correction="FDR")
+                      criterion="p-value", correction="FDR", trace = FALSE)
 
 summary(step.pvmodel.bkwd)
 ```
 
-There is a very good reason this p-value based approach is not included in more common packages like `stats` or `MASS`, the results can often be [very miss leading](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4111019/). If a stepwise feature selection approach is used, it is far better to use a different scoring criterion,such as AIC, or Mallows' Cp.
+There is a very good reason this p-value based approach is not included in more common packages like `stats` or `MASS`, the results can often be [very miss leading](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4111019/). If a stepwise feature selection approach is used, it is far better to use a different scoring criterion,such as AIC, or Mallows' Cp. However,even using these feature selection criteria, it is still prone to overfitting and can provide biased, if not completely flawed results, especially in the presence of multicollinearity. By using p-values as our criterion, not only do we have the aforementioned issues, now we introduce the [Multiple Comparisons Problem](https://en.wikipedia.org/wiki/Multiple_comparisons_problem), so it stands to reason that the features selected by this method disagree more so than the others.
 
 #### Using AIC
 
@@ -122,11 +136,6 @@ A quick summary shows how this method chose to keep far more values than the ste
 feats.shared <- intersect(names(step.aicmodel.both$coefficients),feats.pv)
 length(feats.shared)
 ```
-```{r REMOVECELL}
-feats.shared <- c("(Intercept)","MOPLHOOG",    "MBERBOER",    "MINK123M",    "MKOOPKLA",    "PWAPART",     "PWALAND",     "PPERSAUT",    "PGEZONG",    
-"PBRAND",      "PBYSTAND",    "AGEZONG",     "ABRAND",      "AZEILPL",     "APLEZIER" )
-```
-
 
 ```{r}
 (feats.aic <- setdiff(names(step.aicmodel.both$coefficients),feats.pv))
@@ -142,15 +151,24 @@ In contrast the previous stepwise approach to feature selection, PCA does not fi
 In using PCA, we are not attempting reduce the overall feature set, we are reducing the _dimensionality_ of the dataset. In this example, the coil2k dataset has 86 columns (85 predictors + 1 response), plotting this many features in 2 or even 3 dimensional space is simply not practically possible. With PCA, we exact useful interactions (Eigenvectors) that can be plotted in these lower dimensional spaces.
 
 ```{r}
-cic.pca <- prcomp(~ . -CARAVAN, data=cic_data, center = TRUE, scale. = TRUE, rank=10)
-summary(cic.pca)
+cic.pca <- prcomp(~ . -CARAVAN, data=cic_data, center = TRUE, scale. = TRUE)
+(spca <- summary(cic.pca))
 ```
 
 Looking the Cumulative Proportion of variance explained, it does not look like this dataset will provide a great deal of insight from PCA plotting. Only 16.8% of overall variance is explained by the second variable, ideally we'd like that to quite a bit larger.
 
-```{r, fig.width=6, fig.height=6}
-biplot(cic.pca)
+```{r, }
+spca$importance[3,] %>% enframe(value = "var_explained") %>% 
+  ggplot(aes(x=1:85, y=var_explained)) +
+  geom_line() +
+  geom_hline(aes(yintercept = .90), color="red", linetype=2) +
+  scale_x_continuous(breaks = seq(0,85,5)) +
+  xlab("n_components") + 
+  ylab("variance explained") +
+  ggtitle("Cumulative Variance Explained")
 ```
+
+However, after only 39 components we are able to account for 90% of total variance, and by 62 components we reach 99%. This may be an indication that some variables in the dataset are providing little aditional information to the analysis.
 
 ```{r}
 fviz_pca_ind(cic.pca, geom = "point", 
@@ -196,8 +214,8 @@ Recursive feature elimination is a [greedy optimization algorithm](https://en.wi
 Rather than using a rigidly defined criteria metric such as p-value or AIC, RFE uses feature importance as determined by the model on which it is run. Both methods iterate through the model multiple times making modifications to the feature set, but RFE restores all features after each iteration, keeping track of how important each variable has been to the model in previous generations. 
 
 ```{r}
-
-ctrl <- rfeControl(method = "cv", number = 5, returnResamp = "all", functions = rfFuncs) # Swap to random forest instead of linear model
+# Swap to random forest instead of linear model
+ctrl <- rfeControl(method = "cv", number = 5, returnResamp = "all", functions = rfFuncs) 
 
 rfProfile <- rfe(subset(cic_data, select = -CARAVAN), 
                  as.factor(cic_data$CARAVAN),
@@ -214,11 +232,6 @@ plot(rfProfile, type = c("g", "o"))
 Interestingly, we can see here how additional variables actually decrease the accuracy of the random forest model we are using. As mentioned in the previous notebook's analysis of this dataset, 94% is the accuracy score a model would acheive by simply predicting all `FALSE` values. So, to a certain degree, it is a good thing that the accuracy decreased at first. Otherwise, if the accuracy stayed at 94%, the model would not have even attemped to classifiy any `TRUE` values at all.
 
 ```{r}
-# rfProfile$finalVariables[[2]] %>% 
-#   ggplot(aes(x=reorder(as.factor(var), desc(Overall)), fill=var, weight=Overall)) +
-#   geom_bar() +
-#   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
 plot1 <- xyplot(rfProfile, 
                 type = c("g", "p", "smooth"), 
                 ylab = "RMSE CV Estimates")
@@ -235,28 +248,10 @@ print(plot2, split=c(1,2,1,2))
 Again, here we can see how 0.940 is the central accurary score around which all others are distributed. With fewer variables, each fold of the cross validation is clustered closely around this score, but as new variables are introduced, they begin to spread across a slightly larger spectrum. 
 
 ```{r}
-rfRFE <-  list(summary = defaultSummary,
-               fit = function(x, y, first, last, ...){
-                 library(randomForest)
-                 randomForest(x, y, importance = first, ...)
-                 },
-               pred = function(object, x)  predict(object, x),
-               rank = function(object, x, y) {
-                 vimp <- varImp(object)
-                 vimp <- vimp[order(vimp$Overall,decreasing = TRUE),,drop = FALSE]
-                 vimp$var <- rownames(vimp)                  
-                 vimp
-                 },
-               selectSize = pickSizeBest,
-               selectVar = pickVars)
-```
-
-```{r}
 ctrl <- rfeControl(method = "cv", number = 5, returnResamp = "all", functions = rfFuncs)
 
-ctrl$functions <- rfRFE
 ctrl$returnResamp <- "all"
-rfProfile <- rfe(subset(cic_data, select = -CARAVAN), 
+rfProfile <- rfe(subset(cic_data, select = -CARAVAN),
                  as.factor(cic_data$CARAVAN),
                  sizes=c(4,8,16,32,64,85),
                  rfeControl = ctrl)
@@ -304,8 +299,7 @@ library(umap)
 This R implementation of UMAP has some quirks about it, the easiest fix is just to make our own little wrapper around the function to get a better feel for what is going on.
 
 ```{r}
-# The world's thinnest wrapper.
-# to be able to see all the possiable config params at a glance
+# Extrememly thin wrapper to be able to see all the possiable config params at a glance
 umap.wrap <- 
   function(d, # matrix; input data
            n_neighbors = 15, # integer; number of nearest neighbors
@@ -359,17 +353,17 @@ Taken directly from https://cran.r-project.org/web/packages/umap/umap.pdf with s
 cic.umap <- umap.wrap(subset(cic_data, select = -CARAVAN))
 ```
 
-
-```{r}
-cic.umap.lt <- umap.wrap(d=subset(cic_data, select = -CARAVAN), n_neighbors = 10, n_epochs=350, verbose = TRUE)
-```
-
-
 ```{r}
 cic.umap$layout %>% 
   as.data.frame() %>% 
   ggplot(aes(V1, V2)) +
   geom_point(aes(color=as.factor(cic_data$CARAVAN)))
+```
+
+Our initial experimentation with UMAP does not indicate any clearly distigushable difference between the classes. Perhaps with a bit of parameter tweaking we can coerce useful information out of this algorithm.
+
+```{r}
+cic.umap.lt <- umap.wrap(d=subset(cic_data, select = -CARAVAN), n_neighbors = 10, n_epochs=350, verbose = TRUE)
 ```
 
 ```{r}
@@ -378,17 +372,21 @@ cic.umap.lt$layout %>% as.data.frame() %>%
   geom_point(aes(color=as.factor(cic_data$CARAVAN)))
 ```
 
+An interesting pattern, to say the least, but we can see by the large intermixed cluster at 0,0 UMAP also is not yielding ideal results in terms of interpretability. 
+
+
+
 ```{r}
-tmp$config$verbose
+# TODO : FEATURE IMPORTANCE RANDOM FOREST
 ```
 
 ## Conclusions
 
-This notebook was a complement to, or extension of, the previous previous notebook looking at the CoIL 2000 dataset. The focus this time was more on finding interesting features rather than trying many models. We used p-values from Ordinary Least Squares to perform stepwise feature selection and found 16 statistically significant features.
+This notebook was a complement to, or extension of, the previous previous notebook looking at the CoIL 2000 dataset. The focus this time was more on finding interesting features rather than trying many models. We used p-values from Ordinary Least Squares to perform step-wise feature selection and found 16 statistically significant features.
 
-Thereafter, we performed PCA on both a non-standardized and standardized dataset and plotted scatter and density for each. Following that, we used two non-linear dimensionality reduction techniques, t-SNE and UMAP and looked at how those faired with the data.
+Thereafter, we performed PCA on both a non-standardized and standardized dataset and plotted scatter and density for each. Following that, we used two non-linear dimensionality reduction techniques, t-SNE and UMAP and looked at how those fared with the data.
 
-We closeout with by taking a look at feature importances with a Random Forest model and doing some Recursive Feature Elimination on both that and a Logistic Regressor. We find that the two models share a handful of features in common after elimination, both founding 42 variables worth keeping but only 14 of which were common between them.
+We closeout with by taking a look at feature importance with a Random Forest model and performing Recursive Feature Elimination on both that and a Logistic Regressor. We find that the two models share a handful of features in common after elimination, both finding 42 variables worth keeping but only 14 of which were common between them.
 
 The sweet spot for features seems to be between 42 and 64, as this range can explain over 90% of variance and houses 90% of importance in our Random Forest model.
 

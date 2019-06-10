@@ -2,10 +2,20 @@
 title: "Multi-Model Approach to Unbalanced Data with Caravan Dataset"
 author: "Ryan Gust"
 date: "December 22, 2018"
-output: html_notebook
-editor_options: 
-  chunk_output_type: inline
+output:
+  html_document:
+    editor_options:
+      chunk_output_type: inline
+    self_contained: false
+    lib_dir: Rlibs
+    df_print: paged
 ---
+
+```{r none, include=FALSE}
+# output: html_notebook
+# editor_options: 
+#   chunk_output_type: inline
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -92,7 +102,7 @@ The variable descriptions are quite important as it appears as though the variab
 P. van der Putten and M. van Someren (eds) . CoIL Challenge 2000: The Insurance Company Case. Published by Sentient Machine Research, Amsterdam. Also a Leiden Institute of Advanced Computer Science Technical Report 2000-09. June 22, 2000.
 
 ```{r}
-(cic <- read.csv('data/caravan-insurance-challenge.csv'))
+head(cic <- read.csv('data/caravan-insurance-challenge.csv'), n=30)
 ```
 
 ## Exploratory Data Analysis
@@ -284,13 +294,13 @@ head(preds)
 
 It is all too easy to be mislead by a high accuracy score, 91.6% would be quite good if we were dealing with balanced data, but with this set being as imbalanced as it is, this score is actually worse than if the model had just chosen 0('No') for every sample, taking this route would have yielded ~94% accuracy. 
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 cfmROC(preds,test_data$CARAVAN)
 ```
 
 #### Boosting (Adaboost)
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 ada_orig <- train(CARAVAN ~ ., data = train_data,
                   method = "ada",
                   metric = "ROC",
@@ -304,7 +314,7 @@ cfmROC(pred, test_data$CARAVAN)
 
 #### Random Forest 
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 rf_orig <- train(CARAVAN ~ ., data = train_data, 
                       method = "rf",
                       metric = "ROC",
@@ -344,7 +354,7 @@ dtest <- xgb.DMatrix(data = mat_test, label = c_label_test)
 preds_xgb <- predict(xgb_orig, dtest)
 ```
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 # convert xgb's predicted probabilities back into binary output 
 cfmROC(as.factor(ifelse(preds_xgb > 0.5, 1, 0)), as.factor(c_label_test))
 ```
@@ -355,7 +365,7 @@ cfmROC(as.factor(ifelse(preds_xgb > 0.5, 1, 0)), as.factor(c_label_test))
 
 #### Bagging
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 bag_down <- train(CARAVAN ~ ., data = down_train, 
                       method = "treebag",
                       metric = "ROC",
@@ -370,19 +380,19 @@ The only change moving between data resamplings is the `data = ..` parameter, ev
 
 #### Boosting (Adaboost)
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 ada_down <- run.model(method = "ada", traind = down_train, testd = test_data)
 ```
 
 #### Random Forest
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 rf_down <- run.model(method = "rf", traind = down_train, testd = test_data)
 ```
 
 #### XGBoost
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 xgb_down <- run.model(method = "xgb", traind = down_train, testd = test_data)
 ```
 
@@ -392,25 +402,25 @@ xgb_down <- run.model(method = "xgb", traind = down_train, testd = test_data)
 
 #### Bagging
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 bag_up <- run.model(method = "treebag", up_train, test_data)
 ```
 
 #### Boosting (Adaboost)
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 ada_up <- run.model(method = "ada", up_train, test_data)
 ```
 
 #### Random Forest
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 rf_up <- run.model(method = "rf", up_train, test_data)
 ```
 
 #### XGBoost
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 xgb_up <- run.model(method = "xgb", up_train, test_data)
 ```
 
@@ -420,25 +430,25 @@ xgb_up <- run.model(method = "xgb", up_train, test_data)
 
 #### Bagging
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 bag_smote <- run.model(method = "treebag", smote_train, test_data)
 ```
 
 #### Boosting (Adaboost)
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 ada_smote <- run.model(method = "ada", smote_train, test_data)
 ```
 
 #### Random Forest
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 rf_smote <- run.model(method = "rf", smote_train, test_data)
 ```
 
 #### XGBoost
 
-```{r fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4}
 xgb_smote <- run.model(method = "xgb", smote_train, test_data)
 ```
 
@@ -550,15 +560,20 @@ plot.featimps <- function(resample.method="Unbalanced"){
 grepl("sm.+","smt", ignore.case = TRUE)
 ```
 
-```{r fig.width=10, fig.height=6}
+```{r, fig.width=10, fig.height=6}
 plot.featimps("Unbalanced")
 ```
 
-```{r fig.width=10, fig.height=6}
+```{r, fig.width=10, fig.height=6}
 plot.featimps("Down")
 ```
-```{r}
-plot.featimps("tyjrtyj")
+
+```{r, fig.width=10, fig.height=6}
+plot.featimps("Up")
+```
+
+```{r, fig.width=10, fig.height=6}
+plot.featimps("SMOTE")
 ```
 
 ## Conclusions
@@ -586,45 +601,28 @@ Future work: Countless parameters have been left untweaked, each model could hav
 
 ### References
 
-**Code & Docs**<br>
-https://shiring.github.io/machine_learning/2017/04/02/unbalanced
+#### Code & Docs
+1. https://shiring.github.io/machine_learning/2017/04/02/unbalanced
+2. https://topepo.github.io/caret/subsampling-for-class-imbalances.html
+3. https://amunategui.github.io/binary-outcome-modeling/
+4. http://dpmartin42.github.io/posts/r/imbalanced-classes-part-1
+5. https://stackoverflow.com/questions/46063234/how-to-produce-a-confusion-matrix-and-find-the-misclassification-rate-of-the-na%C3%AF
+6. https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
+7. https://rpubs.com/Wangzf/pROC
 
-https://topepo.github.io/caret/subsampling-for-class-imbalances.html
+#### Text
+1. https://www.kaggle.com/uciml/caravan-insurance-challenge/home
+2. http://glemaitre.github.io/imbalanced-learn/generated/imblearn.over_sampling.RandomOverSampler.html
+3. http://glemaitre.github.io/imbalanced-learn/generated/imblearn.under_sampling.RandomUnderSampler.html
+4. http://glemaitre.github.io/imbalanced-learn/generated/imblearn.over_sampling.SMOTE.html
 
-https://amunategui.github.io/binary-outcome-modeling/
-
-http://dpmartin42.github.io/posts/r/imbalanced-classes-part-1
-
-https://stackoverflow.com/questions/46063234/how-to-produce-a-confusion-matrix-and-find-the-misclassification-rate-of-the-na%C3%AF
-
-https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html
-
-https://rpubs.com/Wangzf/pROC
-
-
-**Text:** <br>
-https://www.kaggle.com/uciml/caravan-insurance-challenge/home
-
-Definitions
-
-http://glemaitre.github.io/imbalanced-learn/generated/imblearn.over_sampling.RandomOverSampler.html
-
-http://glemaitre.github.io/imbalanced-learn/generated/imblearn.under_sampling.RandomUnderSampler.html
-
-http://glemaitre.github.io/imbalanced-learn/generated/imblearn.over_sampling.SMOTE.html
-
-**Other:**<br>
-https://web.archive.org/web/20160818233319/http://www.wi.leidenuniv.nl/~putten/library/cc2000/
-
-https://github.com/jayanttikmani/cross-sellingCaravanInsuranceUsingDataMining/
-
-https://www.statmethods.net/input/valuelabels.html
-
-https://campus.datacamp.com/courses/free-introduction-to-r/chapter-4-factors-4?ex=4
-
-https://stackoverflow.com/questions/5869539/confusion-between-factor-levels-and-factor-labels
-
-https://r4ds.had.co.nz/exploratory-data-analysis.html
+#### Other
+1. https://web.archive.org/web/20160818233319/http://www.wi.leidenuniv.nl/~putten/library/cc2000/
+2. https://github.com/jayanttikmani/cross-sellingCaravanInsuranceUsingDataMining/
+3. https://www.statmethods.net/input/valuelabels.html
+4. https://campus.datacamp.com/courses/free-introduction-to-r/chapter-4-factors-4?ex=4
+5. https://stackoverflow.com/questions/5869539/confusion-between-factor-levels-and-factor-labels
+6. https://r4ds.had.co.nz/exploratory-data-analysis.html
 
 
 

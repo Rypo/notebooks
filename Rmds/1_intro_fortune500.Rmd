@@ -2,11 +2,13 @@
 title: "Introduction: Fortune 500 Companies"
 author: "Ryan Gust"
 date: "September 16, 2018"
-output: 
-  html_document: 
-    self_contained: no
-editor_options: 
-  chunk_output_type: inline
+output:
+  html_document:
+    editor_options: 
+      chunk_output_type: inline
+    self_contained: false
+    lib_dir: Rlibs
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -25,6 +27,7 @@ We'll do some simple plotting with `ggplot` to explore the data in greater detai
 ### Imports
 ```{r}
 library(tidyverse)
+library(DT)
 ```
 [Tidyverse](https://www.tidyverse.org/) is the bread and butter of many R-based analyses, it provides us with ggplot, pipe operators (`%>%`), spreading, dataframe manipulations, and much, much more.
 
@@ -44,8 +47,16 @@ There are 25500 rows representing 51 (years) sets of 500 (companies).
 * `Profit (in millions)` - company's profit for that year
 
 ```{r}
-(f500 <- read.csv('data/fortune500.csv'))
+f500 <- read.csv('data/fortune500.csv')
+# f500 <- datatable(f500, 
+#          #extensions = c('FixedColumns',"FixedHeader"),
+#           options = list(scrollX = TRUE, 
+#                          paging=TRUE,
+#                          fixedHeader=FALSE))
+# #(f500 <- read.csv('data/fortune500.csv'))
+head(f500, n=20)
 ```
+
 ```{r}
 # Remove the trailing peroid from column names 
 colnames(f500) <- gsub('\\.$','',colnames(f500))
@@ -81,7 +92,7 @@ sum(table(f500$Company) > 50)
 There are 74 companies who have been included all 51 years
 
 ```{r}
-f500 %>% count(Company, sort=TRUE)
+head(f500 %>% count(Company, sort=TRUE), n=20)
 ```
 It appears that CBS and OfficeMax, have duplicate entries in certain years, let's see if we can track down the erroneous years.
 
@@ -107,10 +118,10 @@ f500 %>%
 Clearly, in 1994 there was a large upset in these particular company's historical trends. In absence of other information, one may guess that the proliferation of the internet may be at play in these sharp declines.
 
 ```{r}
-(sprdf <-f500 %>% 
+head(sprdf <-f500 %>% 
   filter(Year %in% 1993:1996) %>% 
   select(c(Year,Company,Rank)) %>% 
-  spread(Year, Company))
+  spread(Year, Company), n=30)
 ```
 We can already spot a quite few changes in the top 10 ranks between '94 and '95. Only 1 company changed between '93 and '94 but just one year later we see 3 new companies as well as many shifts up and down the ladder.
 

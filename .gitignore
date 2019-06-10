@@ -3,5 +3,8 @@ nbout
 _*
 .ipynb_checkpoints
 .Rhistory
-Rnotebooks
 *.sublime-workspace
+.Rproj.user
+# Ignore the output files but keep Rmd files
+Rnotebooks/*
+!Rnotebooks/*.Rmd

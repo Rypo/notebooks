@@ -2,9 +2,13 @@
 title: "Multiple Linear Models"
 author: "Ryan Gust"
 date: "December 30, 2018"
-output: html_notebook
-editor_options: 
-  chunk_output_type: inline
+output:
+  html_document:
+    editor_options: 
+      chunk_output_type: inline
+    self_contained: false
+    lib_dir: Rlibs
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -66,7 +70,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.926.5532&rep=rep1&type=
 or by typing `?Boston` after importing `MASS`
 
 ```{r bmdata}
-(bm <- MASS::Boston)
+head(bm <- MASS::Boston, n=10)
 ```
 
 ### Exploratory Data Analysis
@@ -148,7 +152,7 @@ smry$coefficients
 ```
 ```{r}
 summary(lm(medv~. ,data=bm))
-bm[smry$coefficients[,4] < 5e-4]
+head(bm[smry$coefficients[,4] < 5e-4],20)
 ```
 
 ```{r}
@@ -156,7 +160,7 @@ summary(lm(medv ~. -age -indus -crim -chas -zn -tax -rad -black, data=bm))
 # summary(lm(medv ~ nox +rm +dis +ptratio +lstat, data=bm)) # equivalently
 ```
 
-Dropping all but the strongest indicators has reduced the R² value from 0.7348 to 0.7052 but has greatly simplified the model. Depending on the use case this may or may not be desirable, for the purposes of this demonstration, the simpler model will suffice.
+Dropping all but the strongest indicators has reduced the R? value from 0.7348 to 0.7052 but has greatly simplified the model. Depending on the use case this may or may not be desirable, for the purposes of this demonstration, the simpler model will suffice.
 
 ```{r}
 vif(lm(bm$medv ~ lstat +rm +ptratio +dis +nox, data=bm))
@@ -221,7 +225,7 @@ https://www.rdocumentation.org/packages/ISLR/versions/1.2/topics/Carseats
 or by typing `?Carseats` after importing `ISLR`
 
 ```{r csdata}
-(cs <- Carseats)
+head(cs <- Carseats,n=20)
 ```
 
 
