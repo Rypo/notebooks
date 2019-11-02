@@ -1,0 +1,17 @@
+#!/bin/sh
+
+enabled="$(git config --bool hooks.post-commit.enabled)"
+# git -c hook.post-commit.enabled=false commit -n -m "init sup files"
+changed=( `git diff --name-only HEAD HEAD~1 | grep -E "[0-9]+.+\.ipynb"` ) # [0-9]+.+\.ipynb
+if [ "$enabled" != 'false' -a "$changed" ]
+then
+	echo "Post commit start..(${changed[*]})"
+	for file in "${changed[@]}"; do
+		echo "Raw Convert: $file"
+		python hooks/gitexport.py -i -t raw "$file"
+	done || exit 1
+	
+	echo "Post commit finished, restoring raw cells (${changed[*]})"
+	# git stash push -p -- "${changed[*]}"
+fi
+exit 0

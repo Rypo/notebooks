@@ -1,11 +1,15 @@
-*.html
-*.log
-_*
+# Project files
 .idea
 .ipynb_checkpoints
 .Rhistory
 *.sublime-workspace
 .Rproj.user
+# Staging files
+*.html
+*.log
+_*
 # Ignore the output files but keep Rmd files
 Rmds/*
 !Rmds/*.Rmd
+# Symlinks
+*/data

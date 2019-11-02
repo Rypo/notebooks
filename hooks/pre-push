@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# grep -Eir --include={\*.ipynb,\*.Rmd} --exclude-dir=\*.ipynb_checkpoints "\bstopship\b" Rmds Pynbs
+FAIL_PUSH=0
+remote_diff=(`git diff --stat --cached --name-only origin/master`)
+for FILE in "${remote_diff[@]}"; do
+	qfile=(`grep -ilr "STOPSHIP" $FILE`)
+	if [ "$qfile" ]; then
+		echo "$qfile" ' contains STOPSHIP. Address before pushing.'
+		FAIL_PUSH=1
+	fi
+done
+exit "$FAIL_PUSH"

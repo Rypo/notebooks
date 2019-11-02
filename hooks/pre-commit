@@ -1,0 +1,19 @@
+#!/bin/sh
+
+changed=( `git diff --cached --name-only | grep -E "[0-9]+.+\.ipynb"` )
+if [ "$changed" ]
+then
+	echo "Pre-commit start...(${#changed[@]} files: ${changed[@]})"
+	for file in "${changed[@]}"; do
+		echo "Markdown Convert: $file"
+		python hooks/gitexport.py -i -t markdown "$file"
+	done || exit 1 # exit if for-loop errors
+	
+	git add "${changed[*]}"
+	echo "Pre-commit end"
+fi
+exit 0
+
+# https://linuxconfig.org/how-to-use-arrays-in-bash-script
+# ${array[*]} means 1 line, items spaced
+# ${array[@]} means multiline, items newlined?
