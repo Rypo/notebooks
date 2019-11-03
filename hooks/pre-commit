@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# This script takes staged .ipynb files and prepares each for submission
+# to GitHub. It converts raw cells to markdown where applicable and
+# adds the modifications back into the commit.
+
 changed=( `git diff --cached --name-only | grep -E "[0-9]+.+\.ipynb"` )
 if [ "$changed" ]
 then
@@ -13,7 +17,3 @@ then
 	echo "Pre-commit end"
 fi
 exit 0
-
-# https://linuxconfig.org/how-to-use-arrays-in-bash-script
-# ${array[*]} means 1 line, items spaced
-# ${array[@]} means multiline, items newlined?

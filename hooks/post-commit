@@ -1,8 +1,12 @@
 #!/bin/sh
 
+# The post commit script is roughly the inverse of the pre-commit script.
+# It restores any removed raw cells and converts markdown cells back to
+# nbRaw where applicable. In the future, it may commit the changes to a
+# a development branch to allow master to have a clean head.
+
 enabled="$(git config --bool hooks.post-commit.enabled)"
-# git -c hook.post-commit.enabled=false commit -n -m "init sup files"
-changed=( `git diff --name-only HEAD HEAD~1 | grep -E "[0-9]+.+\.ipynb"` ) # [0-9]+.+\.ipynb
+changed=( `git diff --name-only HEAD HEAD~1 | grep -E "[0-9]+.+\.ipynb"` )
 if [ "$enabled" != 'false' -a "$changed" ]
 then
 	echo "Post commit start..(${changed[*]})"

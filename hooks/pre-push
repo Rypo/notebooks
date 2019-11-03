@@ -1,12 +1,17 @@
 #!/bin/sh
 
-# grep -Eir --include={\*.ipynb,\*.Rmd} --exclude-dir=\*.ipynb_checkpoints "\bstopship\b" Rmds Pynbs
-FAIL_PUSH=0
-remote_diff=(`git diff --stat --cached --name-only origin/master`)
+# Before pushing the files to remote, this script validates that
+# the halt word "STOPSHIP" is not present in any file that will
+# be pushed.
+
+FAIL_PUSH=0 # Failure flag
+QTERM="STOPSHIP"
+remote_diff=(`git diff --stat --cached --name-only origin/master | grep -E "[0-9]+.+(\.[rR]md|\.ipynb)"`)
 for FILE in "${remote_diff[@]}"; do
-	qfile=(`grep -ilr "STOPSHIP" $FILE`)
-	if [ "$qfile" ]; then
-		echo "$qfile" ' contains STOPSHIP. Address before pushing.'
+	qfile=(`grep -il "$QTERM" $FILE`)
+	if [ "$qfile" ]
+	then
+		echo "$qfile contains $QTERM. Address before pushing."
 		FAIL_PUSH=1
 	fi
 done
