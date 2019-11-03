@@ -14,13 +14,6 @@ editor_options:
 #     self_contained: false
 #     lib_dir: Rlibs
 #     df_print: paged
-
-# COMPLETE RANDOM FOREST FEATURE IMPORTANCE BEFORE SHIP
-# NOTE: DO NOT ATTEMPT TO RUN UNTIL ERROR RESOLVED... RUN TIME LONG:
-
-# Line 259 Error in { : task 1 failed - "argument 1 is not a vector"
-# Calls: <Anonymous> ... rfe.default -> nominalRfeWorkflow -> %op% -> <Anonymous>
-# Execution halted
 ```
 
 ```{r setup, include=FALSE}
@@ -350,7 +343,7 @@ layout optimization begins from the provided coordinates.
 Taken directly from https://cran.r-project.org/web/packages/umap/umap.pdf with slight stylistic modifications
 
 ```{r}
-cic.umap <- umap.wrap(subset(cic_data, select = -CARAVAN))
+cic.umap <- umap.wrap(subset(cic_data, select = -CARAVAN), n_epochs = 750, alpha=500, min_dist=.2)
 ```
 
 ```{r}
@@ -378,6 +371,7 @@ An interesting pattern, to say the least, but we can see by the large intermixed
 
 ```{r}
 # TODO : FEATURE IMPORTANCE RANDOM FOREST
+rfFuncs$rank()
 ```
 
 ## Conclusions
