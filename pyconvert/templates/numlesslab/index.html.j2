@@ -1,0 +1,29 @@
+{%- extends 'base.html.j2' -%}
+{% from 'head.html.j2' import heading with context %} {# Note: with context is needed to expose "nb" and "resources" to head#}
+
+{# {%- block header -%}
+<!DOCTYPE html>
+<html lang="{{ resources.language_code }}">
+{{ heading() }}
+{%- endblock header -%} #}
+
+{# {%- block body_header -%}
+{% if resources.theme == 'dark' %}
+  <body class="jp-Notebook" data-jp-theme-light="false" data-jp-theme-name="JupyterLab Dark">
+{% else %}
+  <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+{% endif %}
+
+<main>
+{%- endblock body_header -%} #}
+{% block body_footer %}
+{# </main> #}
+{# </body> #}
+{% endblock body_footer %}
+
+{% block footer %}
+{% block footer_js %}
+{% endblock footer_js %}
+{{ super() }}
+{# </html> #}
+{% endblock footer %}
