@@ -8,8 +8,13 @@
 *.html
 *.log
 _*
-# Ignore the output files but keep Rmd files
+*.png
+**/out/*
+**/mdout/*
+
+# Ignore the output files but keep Rmd files + frontmatter
 Rmds/*
 !Rmds/*.Rmd
+!Rmds/frontmatter
 # Symlinks
 */data
