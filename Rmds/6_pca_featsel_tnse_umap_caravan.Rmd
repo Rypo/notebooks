@@ -2,36 +2,37 @@
 title: "Dimensionality Reduction and Feature Analysis"
 author: "Ryan Gust"
 date: "December 24, 2018"
-output: html_notebook
-editor_options: 
-  chunk_output_type: inline
+output:
+  html_document:
+    editor_options:
+      chunk_output_type: inline
+    self_contained: false
+    lib_dir: Rlibs
+    df_print: paged
 ---
-```{r include=FALSE}
-# output:
-#   html_document:
-#     editor_options: 
-#       chunk_output_type: inline
-#     self_contained: false
-#     lib_dir: Rlibs
-#     df_print: paged
+
+```{r, include=FALSE}
+# output: html_notebook
+# editor_options: 
+#   chunk_output_type: inline
 ```
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE)#, warning = FALSE)
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 ## Overview
 
-This notebook will take a second look at the 2016 Kaggle Caravan Insurance Challenge. 
+This notebook will take a second look at the 2016 Kaggle Caravan Insurance Challenge.
 
 This time around, EDA will include: 
-* Stepwise feature selection based on p-values
-* Principal component analysis
-* t-SNE (optional)
+* Stepwise feature selection based on p-values 
+* Principal component analysis 
+* t-SNE (optional) 
 * UMAP (optional)
 
-As well as modeling with:
-* Recursive feature elimination
+As well as modeling with: 
+* Recursive feature elimination 
 * Feature importance analysis
 
 performed on a Logistic Regressor and Random Forest Classifier where applicable.
@@ -45,10 +46,16 @@ library(MASS)
 library(SignifReg) # p-value stepwise feature selection
 library(factoextra) # pretty PCA plot
 ```
+```{r}
+# setup for parallel processing
+library(doParallel)
+cl <- makePSOCKcluster(8)
+registerDoParallel(cl)
+```
 
 ## Data
 
-The dataset used is from the CoIL Challenge 2000 datamining competition. It may be obtained from: https://www.kaggle.com/uciml/caravan-insurance-challenge
+The dataset used is from the CoIL Challenge 2000 datamining competition. It may be obtained from: <https://www.kaggle.com/uciml/caravan-insurance-challenge>
 
 It contains information on customers of an insurance company. The data consists of 86 variables and includes product usage data and socio-demographic data derived from zip area codes.
 
@@ -56,10 +63,9 @@ A description of each variable may be found at the link in this cell listed abov
 
 The variable descriptions are quite important as it appears as though the variable names themselves are abbreviated in Dutch. One helpful pattern to notice is the letters that variables begin with:
 
-* **M** - primary demographics?, no guess for abbreviation
-* **A** - numbers, likely for dutch word _aantal_
-* **P** - percents, likely for dutch word _procent_
-
+-   **M** - primary demographics?, no guess for abbreviation
+-   **A** - numbers, likely for dutch word *aantal*
+-   **P** - percents, likely for dutch word *procent*
 
 **Acknowledgements:**
 
@@ -71,7 +77,7 @@ head(cic <- read.csv('data/caravan-insurance-challenge.csv'))
 
 ## Exploratory Data Analysis
 
-No NA values, all variables are type of int64. The data is peculiar in that every numeric value stands for an attribute of a person. Even variables that could be continuous, such as income, have been binned. In this sense, this dataset is entirely comprised of Categorical and Ordinal values. Other than potential collinearity between percentage and range values, the data is mostly clean. 
+No NA values, all variables are type of int64. The data is peculiar in that every numeric value stands for an attribute of a person. Even variables that could be continuous, such as income, have been binned. In this sense, this dataset is entirely comprised of Categorical and Ordinal values. Other than potential collinearity between percentage and range values, the data is mostly clean.
 
 In contrast with the previous notebook, this time around we will not try and mimic competition settings and instead just use the whole dataset throughout since we are more focused on describing the data rather than predicting.
 
@@ -81,7 +87,7 @@ cic_data <- subset(cic, select=-c(ORIGIN))
 
 ### Stepwise Feature Selection
 
-We will be using the `SignifReg` package to carryout both foward and backward stepwise feature selection. This process iteratively builds a linear model by examining how the model responds to modifications in the predictor variable set. The parameter `alpha` serves as our threshold p-value, `correction` specifies the method for adjusting p-value scoring to help mitigate the [Multiple comparisons problem](https://en.wikipedia.org/wiki/Multiple_comparisons_problem). 
+We will be using the `SignifReg` package to carryout both foward and backward stepwise feature selection. This process iteratively builds a linear model by examining how the model responds to modifications in the predictor variable set. The parameter `alpha` serves as our threshold p-value, `correction` specifies the method for adjusting p-value scoring to help mitigate the [Multiple comparisons problem](https://en.wikipedia.org/wiki/Multiple_comparisons_problem).
 
 In the forward case, the model is built up one variable at a time, each step selecting the variable whose addition resulted in the lowest overall p-value. The process continues until there are no possible additions that can be made that satisfy the p-value threshold criterion.
 
@@ -91,18 +97,29 @@ When the backward method is used, the model begins with the full set of predicto
 
 ```{r}
 # Forward pass
-step.pvmodel.fwd <- SignifReg(CARAVAN ~ ., data=cic_data,
+step.pvmodel.fwd <- SignifReg(lm(CARAVAN ~ ., data=cic_data),
                     alpha=0.05, direction="forward", 
-                    criterion="p-value",correction="FDR", trace = FALSE)
+                    criterion="p-value",adjust.method="fdr", trace = FALSE)
 
 summary(step.pvmodel.fwd)
 ```
 
 ```{r}
+# Reduce down to best/worst to save time
+sumfwd <- summary(step.pvmodel.fwd)
+pvals <- sumfwd$coefficients[,4]
+feat_extremes <- pvals[pvals < 0.1 | pvals > 0.9] %>% names() %>% .[. != "(Intercept)"]
+
+fmla <- as.formula(paste("CARAVAN ~ ", paste(feat_extremes, collapse= "+")))
+fit_extreme <- lm(fmla, data = cic_data)
+fit_extreme
+```
+
+```{r}
 # Backward pass
-step.pvmodel.bkwd <-SignifReg(CARAVAN~., data=cic_data, 
+step.pvmodel.bkwd <- SignifReg(fit = fit_extreme,
                       alpha=0.05, direction="backward",
-                      criterion="p-value", correction="FDR", trace = FALSE)
+                      criterion="p-value", adjust.method="fdr", trace = FALSE)
 
 summary(step.pvmodel.bkwd)
 ```
@@ -113,10 +130,10 @@ There is a very good reason this p-value based approach is not included in more 
 
 ```{r}
 full_model <- lm(CARAVAN ~., data = cic_data)
-step.aicmodel.both <- stepAIC(full_model, direction = "both", trace = FALSE)
+step.aicmodel.both <- stepAIC(full_model, direction = "both", trace = FALSE, steps=10)
 ```
 
-Using AIC as the evauating metric rather than p-value allows us to use a bidirectional approach through the feature set, providing a more thoroughly vetted set of predictor variables.  
+Using AIC as the evaluating metric rather than p-value allows us to use a bidirectional approach through the feature set, providing a more thoroughly vetted set of predictor variables.
 
 ```{r}
 summary(step.aicmodel.both)
@@ -139,9 +156,9 @@ There were a total of 15 shared features identified as a statistically significa
 
 ### Principal Components Analysis (PCA)
 
-In contrast the previous stepwise approach to feature selection, PCA does not filter out variables based on a metric, but rather, attempts to combine them in such a manner that the conglomerate variables explain the largest amount of variance. 
+In contrast the previous stepwise approach to feature selection, PCA does not filter out variables based on a metric, but rather, attempts to combine them in such a manner that the conglomerate variables explain the largest amount of variance.
 
-In using PCA, we are not attempting reduce the overall feature set, we are reducing the _dimensionality_ of the dataset. In this example, the coil2k dataset has 86 columns (85 predictors + 1 response), plotting this many features in 2 or even 3 dimensional space is simply not practically possible. With PCA, we exact useful interactions (Eigenvectors) that can be plotted in these lower dimensional spaces.
+In using PCA, we are not attempting reduce the overall feature set, we are reducing the *dimensionality* of the dataset. In this example, the coil2k dataset has 86 columns (85 predictors + 1 response), plotting this many features in 2 or even 3 dimensional space is simply not practically possible. With PCA, we exact useful interactions (Eigenvectors) that can be plotted in these lower dimensional spaces.
 
 ```{r}
 cic.pca <- prcomp(~ . -CARAVAN, data=cic_data, center = TRUE, scale. = TRUE)
@@ -184,7 +201,7 @@ cic_sm.pca <- prcomp(~ ., data=cic_sm, center = TRUE, scale. = TRUE)
 biplot(cic_sm.pca)
 ```
 
-Even reducing the feature set down to just 15 variables didn't help clear up the component plot all that much. Let's step up to a more advanced method of plotting to see if we can coherse some information out of this analysis. 
+Even reducing the feature set down to just 15 variables didn't help clear up the component plot all that much. Let's step up to a more advanced method of plotting to see if we can coherse some information out of this analysis.
 
 ```{r, fig.width=6, fig.height=6}
 fviz_pca_biplot(cic_sm.pca, geom="point",
@@ -198,13 +215,15 @@ fviz_pca_biplot(cic_sm.pca, geom="point",
           repel = TRUE, title="PCA-2d plot, 15 feature set")
 ```
 
-Using factoextra's biplot certainly improves plot aesthetics but as for uncovering additional useful information, that is debateable. We get a better sense of the how disjoint the two groups are, but we would need to dig deeper by experiementing with other features to realistically understand if there is any insight to be gained here. At best, we can say we have slightly stronger evidence supporting the idea that `A` and `P` prefixes are just two ways of representing the same value, but the correlation matrix in the [previous notebook]() still supports that claim far better. 
+Using factoextra's biplot certainly improves plot aesthetics but as for uncovering additional useful information, that is debateable. We get a better sense of the how disjoint the two groups are, but we would need to dig deeper by experiementing with other features to realistically understand if there is any insight to be gained here. At best, we can say we have slightly stronger evidence supporting the idea that `A` and `P` prefixes are just two ways of representing the same value, but the correlation matrix in the [previous notebook]() still supports that claim far better.
 
 ### Recursive feature elimination
 
-Recursive feature elimination is a [greedy optimization algorithm](https://en.wikipedia.org/wiki/Greedy_algorithm) that serves the same purpose as stepwise feature selection but does so in a different manner. 
+Recursive feature elimination is a [greedy optimization algorithm](https://en.wikipedia.org/wiki/Greedy_algorithm) that serves the same purpose as stepwise feature selection but does so in a different manner.
 
-Rather than using a rigidly defined criteria metric such as p-value or AIC, RFE uses feature importance as determined by the model on which it is run. Both methods iterate through the model multiple times making modifications to the feature set, but RFE restores all features after each iteration, keeping track of how important each variable has been to the model in previous generations. 
+Rather than using a rigidly defined criteria metric such as p-value or AIC, RFE uses feature importance as determined by the model on which it is run. Both methods iterate through the model multiple times making modifications to the feature set, but RFE restores all features after each iteration, keeping track of how important each variable has been to the model in previous generations.
+
+
 
 ```{r}
 # Swap to random forest instead of linear model
@@ -222,7 +241,7 @@ rfProfile
 plot(rfProfile, type = c("g", "o"))
 ```
 
-Interestingly, we can see here how additional variables actually decrease the accuracy of the random forest model we are using. As mentioned in the previous notebook's analysis of this dataset, 94% is the accuracy score a model would acheive by simply predicting all `FALSE` values. So, to a certain degree, it is a good thing that the accuracy decreased at first. Otherwise, if the accuracy stayed at 94%, the model would not have even attemped to classifiy any `TRUE` values at all.
+Interestingly, we can see here how additional variables actually decrease the accuracy of the random forest model we are using. As mentioned in the previous notebook's analysis of this dataset, 94% is the accuracy score a model would achieve by simply predicting all `FALSE` values. So, to a certain degree, it is a good thing that the accuracy decreased at first. Otherwise, if the accuracy stayed at 94%, the model would not have even attempted to classify any `TRUE` values at all.
 
 ```{r}
 plot1 <- xyplot(rfProfile, 
@@ -238,7 +257,7 @@ print(plot1, split=c(1,1,1,2), more=TRUE)
 print(plot2, split=c(1,2,1,2))
 ```
 
-Again, here we can see how 0.940 is the central accurary score around which all others are distributed. With fewer variables, each fold of the cross validation is clustered closely around this score, but as new variables are introduced, they begin to spread across a slightly larger spectrum. 
+Again, here we can see how 0.940 is the central accurary score around which all others are distributed. With fewer variables, each fold of the cross validation is clustered closely around this score, but as new variables are introduced, they begin to spread across a slightly larger spectrum.
 
 ```{r}
 ctrl <- rfeControl(method = "cv", number = 5, returnResamp = "all", functions = rfFuncs)
@@ -281,7 +300,7 @@ cic.tsne$Y %>%
 
 ```
 
-T-SNE does little to help delineate differences among the pos/neg samples. There are many small clusters, but each contains both 0 and 1 response outcomes. That said, one advantage tsne offers is a high degree of tweakability, adjustments to `initial_dims` or `perplexity` could yield more interesting results, but nothing immediately jumps out saying there is reason to explore these options in great depth. 
+T-SNE does little to help delineate differences among the pos/neg samples. There are many small clusters, but each contains both 0 and 1 response outcomes. That said, one advantage tsne offers is a high degree of tweakability, adjustments to `initial_dims` or `perplexity` could yield more interesting results, but nothing immediately jumps out saying there is reason to explore these options in great depth.
 
 ### UMAP
 
@@ -292,7 +311,7 @@ library(umap)
 This R implementation of UMAP has some quirks about it, the easiest fix is just to make our own little wrapper around the function to get a better feel for what is going on.
 
 ```{r}
-# Extrememly thin wrapper to be able to see all the possiable config params at a glance
+# Extremely thin wrapper to be able to see all the possiable config params at a glance
 umap.wrap <- 
   function(d, # matrix; input data
            n_neighbors = 15, # integer; number of nearest neighbors
@@ -313,6 +332,7 @@ umap.wrap <-
            spread = 1, # used during automatic estimation of a/b parameters.
            random_state = NA, # seed for random number generation used during umap()
            transform_state = NA, # seed for random number generation used during predict()
+           knn=NA, # object of class umap.knn; precomputed nearest neighbors
            knn_repeats = 1, # number of times to restart knn search
            verbose = FALSE, # determines whether to show progress messages
            umap_learn_args = NA, # vector of arguments to python package umap-learn
@@ -326,21 +346,13 @@ umap.wrap <-
   }
 ```
 
-- `metric`: character or function; determines how distances between data points are computed. When
-using a string, available metrics are: c("euclidean", "manhattan"). Other availble generalized metrics are:
-c("cosine", "pearson", "pearson2"). Note: the triangle inequality may not be satisfied by some generalized
-metrics, hence knn search may not be optimal. When using `metric.function` as a function, the
-signature must be `function(matrix, origin, target)` and should compute a distance between the origin
-column and the target columns
+-   `metric`: character or function; determines how distances between data points are computed. When using a string, available metrics are: c("euclidean", "manhattan"). Other available generalized metrics are: c("cosine", "pearson", "pearson2"). Note: the triangle inequality may not be satisfied by some generalized metrics, hence knn search may not be optimal. When using `metric.function` as a function, the signature must be `function(matrix, origin, target)` and should compute a distance between the origin column and the target columns
 
-- `init`: character or matrix; The default string "spectral" computes an initial embedding 
-using eigenvectors of the connectivity graph matrix. An alternative is the string "random", which creates an
-initial layout based on random coordinates. This setting.can also be set to a matrix, in which case
-layout optimization begins from the provided coordinates.
+-   `init`: character or matrix; The default string "spectral" computes an initial embedding using eigenvectors of the connectivity graph matrix. An alternative is the string "random", which creates an initial layout based on random coordinates. This setting.can also be set to a matrix, in which case layout optimization begins from the provided coordinates.
 
-- `method`: character; implementation. Available methods are 'naive' (an implementation written in pure R) and 'umap-learn' (requires python package 'umap-learn')
+-   `method`: character; implementation. Available methods are 'naive' (an implementation written in pure R) and 'umap-learn' (requires python package 'umap-learn')
 
-Taken directly from https://cran.r-project.org/web/packages/umap/umap.pdf with slight stylistic modifications
+Taken directly from <https://cran.r-project.org/web/packages/umap/umap.pdf> with slight stylistic modifications
 
 ```{r}
 cic.umap <- umap.wrap(subset(cic_data, select = -CARAVAN), n_epochs = 750, alpha=500, min_dist=.2)
@@ -353,7 +365,7 @@ cic.umap$layout %>%
   geom_point(aes(color=as.factor(cic_data$CARAVAN)))
 ```
 
-Our initial experimentation with UMAP does not indicate any clearly distigushable difference between the classes. Perhaps with a bit of parameter tweaking we can coerce useful information out of this algorithm.
+Our initial experimentation with UMAP does not indicate any clearly distinguishable difference between the classes. Perhaps with a bit of parameter tweaking we can coerce useful information out of this algorithm.
 
 ```{r}
 cic.umap.lt <- umap.wrap(d=subset(cic_data, select = -CARAVAN), n_neighbors = 10, n_epochs=350, verbose = TRUE)
@@ -365,13 +377,11 @@ cic.umap.lt$layout %>% as.data.frame() %>%
   geom_point(aes(color=as.factor(cic_data$CARAVAN)))
 ```
 
-An interesting pattern, to say the least, but we can see by the large intermixed cluster at 0,0 UMAP also is not yielding ideal results in terms of interpretability. 
-
-
+An interesting pattern, to say the least, but we can see by the large intermixed cluster at 0,0 UMAP also is not yielding ideal results in terms of interpretability.
 
 ```{r}
-# TODO : FEATURE IMPORTANCE RANDOM FOREST
-rfFuncs$rank()
+# TODO : Feature importance random forest
+# rfFuncs$rank()
 ```
 
 ## Conclusions
@@ -384,34 +394,38 @@ We closeout with by taking a look at feature importance with a Random Forest mod
 
 The sweet spot for features seems to be between 42 and 64, as this range can explain over 90% of variance and houses 90% of importance in our Random Forest model.
 
-#### Future work: 
+#### Future work:
+
 There are quite a few other dimensionality reduction techniques that could be tried, ISOMAP, SOM, Sammson mapping, and many more, all of which could provide more insight into the data. The question still remains as to whether or not the presumed redundant variables can be removed without negatively impacting predictive power. This should be explored in great depth now that we have more evidence supporting the claim. Additionally, it would be interesting to see if some form of semi-supervised learning approach could be used via k-means clustering or a similar approach.
 
 ### References
 
 #### Code
-http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/154-stepwise-regression-essentials-in-r/
 
-https://topepo.github.io/caret/recursive-feature-elimination.html#recursive-feature-elimination-via-caret
+<http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/154-stepwise-regression-essentials-in-r/>
 
-https://www.datacamp.com/community/tutorials/pca-analysis-r
+<https://topepo.github.io/caret/recursive-feature-elimination.html#recursive-feature-elimination-via-caret>
 
-https://github.com/tkonopka/umap/blob/master/R/umap.R
+<https://www.datacamp.com/community/tutorials/pca-analysis-r>
+
+<https://github.com/tkonopka/umap/blob/master/R/umap.R>
 
 #### Text
-https://www.kaggle.com/uciml/caravan-insurance-challenge/home
 
-https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding
+<https://www.kaggle.com/uciml/caravan-insurance-challenge/home>
 
-https://cran.r-project.org/web/packages/SignifReg/SignifReg.pdf
+<https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding>
 
-https://cran.r-project.org/web/packages/umap/umap.pdf
+<https://cran.r-project.org/web/packages/SignifReg/SignifReg.pdf>
+
+<https://cran.r-project.org/web/packages/umap/umap.pdf>
 
 #### Other
-http://adv-r.had.co.nz/Computing-on-the-language.html
 
-https://www.rdocumentation.org/packages/base/versions/3.5.1/topics/eval
+<http://adv-r.had.co.nz/Computing-on-the-language.html>
 
-https://stat.ethz.ch/R-manual/R-devel/library/base/html/substitute.html
+<https://www.rdocumentation.org/packages/base/versions/3.5.1/topics/eval>
 
-https://github.com/vqv/ggbiplot
+<https://stat.ethz.ch/R-manual/R-devel/library/base/html/substitute.html>
+
+<https://github.com/vqv/ggbiplot>
