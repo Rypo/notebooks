@@ -1,0 +1,17 @@
+---
+title: "Introduction: Fortune 500 Companies R"
+# permalink: /r/intro-fortune-500
+slug: intro-fortune-500
+excerpt: "A brief introduction to data analysis with R using the fortune 500 dataset."
+collection: r
+categories: [r, intro]
+tags: [r, introduction, fortune500, EDA]
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-09-16
+last_modified_at: 2019-01-08
+header:
+  teaser: assets/images/teasers/thumbs/fortune500.png
+counterpart: 1_intro_fortune500
+thumbnailsrc: https://www.bizjournals.com/columbus/news/2016/06/06/fortune-500-includes-24-ohio-companies-and-big.html 
+---

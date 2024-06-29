@@ -1,0 +1,17 @@
+---
+title: "Clustering on the World Happiness Report 2016"
+# permalink: /r/clustering-whr2019
+slug: clustering-whr2019
+excerpt: "Attempting to quantify happiness. Building clustering models on the 2016 World happiness report."
+collection: r
+categories: [r, multimodel, EDA]
+tags: [r, happiness, clustering, GMM, KMeans, AffinityPropagation, Agglomerative]
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-12-26
+last_modified_at: 2018-12-29
+header:
+  teaser: assets/images/teasers/thumbs/happiness_index_report.png
+counterpart: 9_clustering_whr2019
+thumbnailsrc: https://bulawayo24.com/index-id-news-sc-national-byo-158715.html
+---

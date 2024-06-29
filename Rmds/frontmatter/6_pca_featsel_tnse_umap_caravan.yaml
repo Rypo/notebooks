@@ -1,0 +1,29 @@
+---
+title: "Dimensionality Reduction and Feature Analysis"
+# permalink: /r/unbalanced-data-caravan
+slug: dimensionality-reduction
+excerpt: 2016 Kaggle Caravan Insurance Challenge (Part 2 of 2). Dimensionality reduction
+  and feature analysis.
+collection: r
+categories:
+- r
+- multimodel
+- classification
+tags:
+- r
+- unbalanced
+- featureSelection
+- dimensionalityReduction
+- PCA
+- t-SNE
+- UMAP
+- RFE
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-12-24
+last_modified_at: 2024-06-24
+header:
+  teaser: assets/images/teasers/thumbs/dimensionreduction.png
+counterpart: 6_pca_featsel_tnse_umap_caravan
+thumbnailsrc: https://data-flair.training/blogs/dimensionality-reduction-tutorial/
+---

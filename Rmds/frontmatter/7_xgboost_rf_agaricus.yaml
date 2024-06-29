@@ -1,0 +1,17 @@
+---
+title: "Gradient Boosting with XGBoost and the Agaricus Dataset"
+# permalink: /r/xgboost-agaricus
+slug: xgboost-agaricus
+excerpt: "What to do when things go too well. Building and comparing XGBoost and Random Forest models on the Agaricus dataset (Mushroom Database)."
+collection: r
+categories: [r, multimodel, classification]
+tags: [r, agaricus, synthetic, RandomForest, XGBoost]
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-12-26
+last_modified_at: 2019-01-29
+header:
+  teaser: assets/images/teasers/thumbs/agaricus.png
+counterpart: 7_xgboost_rf_agaricus
+thumbnailsrc: https://commons.wikimedia.org/w/index.php?curid=1710232
+---

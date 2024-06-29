@@ -1,0 +1,17 @@
+---
+title: "Multi-Model Approach to Imbalanced Data with Caravan Dataset"
+# permalink: /r/unbalanced-data-caravan
+slug: imbalanced-data-caravan
+excerpt: "2016 Kaggle Caravan Insurance Challenge (Part 1 of 2). Dealing with imbalanced data."
+collection: r
+categories: [r, multimodel, classification]
+tags: [r, imbalanced, SMOTE, undersampling,oversampling, RandomForest, Bagging, Boosting]
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-12-22
+last_modified_at: 2019-01-17
+header:
+  teaser: assets/images/teasers/thumbs/imbdata.png
+counterpart: 5_imbalanced_bag_boost_rf
+thumbnailsrc: https://www.datascience.com/blog/imbalanced-data
+---

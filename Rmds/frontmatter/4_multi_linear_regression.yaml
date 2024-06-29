@@ -1,0 +1,17 @@
+---
+title: "Multiple Linear Regression"
+# permalink: /r/multiple-linear-regression
+slug: multiple-linear-regression
+excerpt: "Getting started with modeling. Multiple approaches to Multiple Linear Regression using the classic Boston Housing dataset"
+collection: r
+categories: [r, regression]
+tags: [r, linear, regression, airfare]
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-12-30
+last_modified_at: 2019-01-12
+header:
+  teaser: assets/images/teasers/thumbs/multiplelr.png
+counterpart: 4_multi_linear_regression
+thumbnailsrc: https://www.guru99.com/r-simple-multiple-linear-regression.html
+---

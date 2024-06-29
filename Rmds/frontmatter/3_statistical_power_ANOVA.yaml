@@ -1,0 +1,17 @@
+---
+title: "Statistical Power"
+# permalink: /r/power-ttests
+slug: power-ttests
+excerpt: "Analyzing the classic sleep dataset using, two-sample and paired t-tests, and calculating statistical power."
+collection: r
+categories: [r, statistics]
+tags: [r, statistics, sleep, ttests, power]
+# layout: rmd
+author: "Ryan Gust"
+date: 2018-12-29
+last_modified_at: 2019-01-10
+header:
+  teaser: assets/images/teasers/thumbs/ttests.png
+counterpart: 3_statistical_power_ANOVA
+thumbnailsrc: https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/t-test/
+---
