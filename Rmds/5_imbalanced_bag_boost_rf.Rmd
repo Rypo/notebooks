@@ -1,5 +1,5 @@
 ---
-title: "Multi-Model Approach to Unbalanced Data with Caravan Dataset"
+title: "Multi-Model Approach to Imbalanced Data with Caravan Dataset"
 author: "Ryan Gust"
 date: "December 22, 2018"
 output:
@@ -32,8 +32,8 @@ Several models will be used in attempting to answer this question:
 * Boosting (2 variants)
 * Random Forest
 
-As we are working with unbalanced data, each model will have be run against a training dataset in 4 different states:
-* Unbalanced (No modifications)
+As we are working with imbalanced data, each model will have be run against a training dataset in 4 different states:
+* Imbalanced (No modifications)
 * Undersampled
 * Oversampled
 * SMOTE
@@ -184,7 +184,7 @@ props <- data.frame(bind_rows(table(train_data$CARAVAN),
                      table(up_train$CARAVAN),
                      table(smote_train$CARAVAN)),
                      #table(rose_train$CARAVAN)), 
-                    row.names = c('Unbalanced','Downsample','Upsample','SMOTE'))
+                    row.names = c('Imbalanced','Downsample','Upsample','SMOTE'))
 props$Total <- props$No+props$Yes
 props
 ```
@@ -275,7 +275,7 @@ ctrl <- trainControl(method = "none", classProbs = TRUE)
 
 This will serve as the baseline training control for all models. Setting method to "none" disables cross validation, we could certainly build better models with CV enabled, but it significantly increases training time, later notebooks will explore this in detail. Setting `classProbs=TRUE` gives us probabilities rather than binary outputs and  so that `ROC` may be used as our evaluation metric. 
 
-### Unbalanced
+### Imbalanced
 
 To establish a frame of reference, we will first try running all four models against the original data, making to attempts to correct the imbalance.
 
@@ -481,16 +481,16 @@ get.imps <- function(models = list(bag,ada,rf,xgb)){
 
 ```{r plotfeats, fig.width=10, fig.height=6}
 
-plot.featimps <- function(resample.method="Unbalanced"){
+plot.featimps <- function(resample.method="Imbalanced"){
   #' Plot feature importances
   #'
   #' Plots all four models feature importances
   #'
-  #' @param resample.method model set to use: ("Unbalanced" | "Downsampled" | "Upsampled" | "SMOTE")
+  #' @param resample.method model set to use: ("Imbalanced" | "Downsampled" | "Upsampled" | "SMOTE")
   #'
   
-  if(grepl("(unb|ori).*",resample.method,ignore.case = TRUE)){
-    resample.method <- "Unbalanced"
+  if(grepl("(imb|ori).*",resample.method,ignore.case = TRUE)){
+    resample.method <- "Imbalanced"
     imps <- get.imps(list(bag_orig, ada_orig, rf_orig, xgb_orig))
   }else if(grepl("(und|dow).*",resample.method, ignore.case = TRUE)){
     resample.method <- "Downsampled"
@@ -503,13 +503,13 @@ plot.featimps <- function(resample.method="Unbalanced"){
     imps <- get.imps(list(bag_smote, ada_smote, rf_smote, xgb_smote))
   } else stop("invalid resample selection ('orig'|'down'|'up'|'smote')")
   
-  # resample.method <- ifelse(grepl("(unba|ori).+",resample.method,ignore.case = TRUE),"Unbalanced",resample.method)
+  # resample.method <- ifelse(grepl("(imba|ori).+",resample.method,ignore.case = TRUE),"Imbalanced",resample.method)
   # resample.method <- ifelse(grepl("(und|dow).+",resample.method, ignore.case = TRUE),"Downsampled",resample.method)
   # resample.method <- ifelse(grepl("(up|ove).+",resample.method, ignore.case = TRUE),"Upsampled",resample.method)
   # resample.method <- ifelse(grepl("sm.+",resample.method, ignore.case = TRUE),"SMOTE",resample.method)
 
   # imps <- switch (resample.method,
-  #   Unbalanced = get.imps(list(bag_orig, ada_orig, rf_orig, xgb_orig)),
+  #   Imbalanced = get.imps(list(bag_orig, ada_orig, rf_orig, xgb_orig)),
   #   Downsampled = get.imps(list(bag_down, ada_down, rf_down, xgb_down)),
   #   Upsampled = get.imps(list(bag_up, ada_up, rf_up, xgb_up)),
   #   SMOTE = get.imps(list(bag_smote, ada_smote, rf_smote, xgb_smote))
@@ -561,7 +561,7 @@ grepl("sm.+","smt", ignore.case = TRUE)
 ```
 
 ```{r, fig.width=10, fig.height=6}
-plot.featimps("Unbalanced")
+plot.featimps("Imbalanced")
 ```
 
 ```{r, fig.width=10, fig.height=6}
@@ -602,7 +602,7 @@ Future work: Countless parameters have been left untweaked, each model could hav
 ### References
 
 #### Code & Docs
-1. https://shiring.github.io/machine_learning/2017/04/02/unbalanced
+1. https://shiring.github.io/machine_learning/2017/04/02/imbalanced
 2. https://topepo.github.io/caret/subsampling-for-class-imbalances.html
 3. https://amunategui.github.io/binary-outcome-modeling/
 4. http://dpmartin42.github.io/posts/r/imbalanced-classes-part-1
