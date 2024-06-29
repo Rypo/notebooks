@@ -1,0 +1,26 @@
+---
+title: Plotting Distributions
+# permalink: /python/plotting-distributions
+slug: plotting-distributions
+excerpt: 'Plotting a few common statistical functions, namely: PDF, CDF, and iCDF'
+collection: python
+categories:
+- python
+- statistics
+tags:
+- python
+- statistics
+- plotting
+- probability
+- functions
+# layout: single-jnb
+classes: 
+- jp-Notebook
+author: Ryan Gust
+date: '2018-09-23'
+last_modified_at: '2019-01-09'
+header:
+  teaser: assets/images/teasers/thumbs/distributions.png
+counterpart: 2018-12-29-plotting-distributions
+thumbnailsrc: plotting-distributions
+---

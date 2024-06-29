@@ -1,0 +1,30 @@
+---
+title: Clustering on the World Happiness Report 2019
+# permalink: /python/clustering-whr2019
+slug: clustering-whr2019
+excerpt: Attempting to quantify happiness. Building clustering models on the 2019
+  World happiness report.
+collection: python
+categories:
+- python
+- multimodel
+- EDA
+tags:
+- python
+- happiness
+- clustering
+- GMM
+- KMeans
+- AffinityPropagation
+- Agglomerative
+# layout: single-jnb
+classes: 
+- jp-Notebook
+author: Ryan Gust
+date: '2018-11-11'
+last_modified_at: '2019-05-18'
+header:
+  teaser: assets/images/teasers/thumbs/happiness_index_report.png
+counterpart: 2018-12-26-clustering-kmean-gmm-ap-whr
+thumbnailsrc: https://bulawayo24.com/index-id-news-sc-national-byo-158715.html
+---

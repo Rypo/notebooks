@@ -1,0 +1,30 @@
+---
+title: Model Interpretability with XGBoost and the Agaricus Dataset
+# permalink: /python/model-interpretability
+slug: model-interpretability
+excerpt: What to do when things go too well. Building and comparing XGBoost and Random
+  Forest models on the Agaricus dataset (Mushroom Database).
+collection: python
+categories:
+- python
+- multimodel
+- classification
+tags:
+- python
+- agaricus
+- synthetic
+- SHAP
+- LIME
+# layout: single-jnb
+classes: 
+- jp-Notebook
+author: Ryan Gust
+date: '2018-11-02'
+last_modified_at: '2019-06-25'
+head_scripts:
+- /assets/js/pyscripts/shap_bundle.js
+header:
+  teaser: assets/images/teasers/thumbs/agaricus.png
+counterpart: 2018-12-26-xgboost-rf-agaricus
+thumbnailsrc: https://commons.wikimedia.org/w/index.php?curid=1710232
+---

@@ -1,0 +1,27 @@
+---
+title: T-tests and Analysis of Variance (ANOVA)
+# permalink: /python/anova-ttests
+slug: anova-ttests
+excerpt: Analyzing a mock voters dataset using ANOVA, T-tests, and Turkey's Range
+  Test.
+collection: python
+categories:
+- python
+- statistics
+tags:
+- python
+- statistics
+- ANOVA
+- ttests
+- voting
+# layout: single-jnb
+classes: 
+- jp-Notebook
+author: Ryan Gust
+date: '2018-09-30'
+last_modified_at: '2019-01-10'
+header:
+  teaser: assets/images/teasers/thumbs/ttests.png
+counterpart: 2018-12-29-statistical-power-ANOVA
+thumbnailsrc: https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/t-test/
+---

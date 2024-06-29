@@ -1,0 +1,26 @@
+---
+title: Multiple Linear Regression
+# permalink: /python/multiple-linear-regression
+slug: multiple-linear-regression
+excerpt: Getting started with modeling. Multiple approaches to Multiple Linear Regression
+  using the US DoT airfare dataset.
+collection: python
+categories:
+- python
+- regression
+tags:
+- python
+- linear
+- regression
+- airfare
+# layout: single-jnb
+classes: 
+- jp-Notebook
+author: Ryan Gust
+date: '2018-10-07'
+last_modified_at: '2019-01-10'
+header:
+  teaser: assets/images/teasers/thumbs/multiplelr.png
+counterpart: 2018-12-30-multi-linear-regression
+thumbnailsrc: https://www.guru99.com/r-simple-multiple-linear-regression.html
+---

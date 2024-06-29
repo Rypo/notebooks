@@ -1,0 +1,31 @@
+---
+title: 'Modeling on Imbalanced Data: Caravan Insurance'
+# permalink: /python/unbalanced-data-caravan
+slug: imbalanced-data-caravan
+excerpt: 2016 Kaggle Caravan Insurance Challenge (Part 1 of 2). Dealing with imbalanced
+  data.
+collection: python
+categories:
+- python
+- multimodel
+- classification
+tags:
+- python
+- imbalanced
+- SMOTE
+- undersampling
+- oversampling
+- RandomForest
+- Bagging
+- Boosting
+# layout: single-jnb
+classes: 
+- jp-Notebook
+author: Ryan Gust
+date: '2018-10-14'
+last_modified_at: '2019-06-04'
+header:
+  teaser: assets/images/teasers/thumbs/imbdata.png
+counterpart: 2018-12-22-imbalanced-bag-boost-rf
+thumbnailsrc: https://www.datascience.com/blog/imbalanced-data
+---
